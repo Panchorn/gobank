@@ -1,0 +1,21 @@
+version: '3.3'
+
+services:
+  db:
+    image: mysql:9.0.1
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'local_db'
+      MYSQL_USER: 'local_user'
+      MYSQL_PASSWORD: 'p@ssw0rd'
+      MYSQL_ROOT_PASSWORD: 'p@ssw0rd'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - local_db:/var/lib/mysql
+      - ./docker:/docker-entrypoint-initdb.d
+
+volumes:
+  local_db:
