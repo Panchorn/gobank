@@ -4,6 +4,7 @@ import (
 	// "fmt"
 	"fmt"
 	"gobank/handler"
+	"gobank/logs"
 	"gobank/repository"
 	"gobank/service"
 	"net/http"
@@ -23,18 +24,28 @@ func main() {
 
 	// choose repository from database or mock
 	customerRepositoryDB := repository.NewCustomerRepositoryDB(db)
-	customerRepositoryMock := repository.NewCustomerRepositoryMock()
-	repository := customerRepositoryDB
-	_ = customerRepositoryMock
+	// customerRepositoryMock := repository.NewCustomerRepositoryMock()
+	customerRepository := customerRepositoryDB
+	// _ = customerRepositoryMock
 
-	customerService := service.NewCustomerService(repository)
+	customerService := service.NewCustomerService(customerRepository)
 	customerHandler := handler.NewCustomerHandler(customerService)
+
+	accountRepositoryDB := repository.NewAccountRepositoryDb(db)
+	accountRepository := accountRepositoryDB
+	accountService := service.NewAccountService(accountRepository)
+	accountHandler := handler.NewAccountHandler(accountService)
+
 	router := mux.NewRouter()
 
 	router.HandleFunc("/customers", customerHandler.GetCustomers).Methods(http.MethodGet)
 	router.HandleFunc("/customers/{customerID:[0-9]+}", customerHandler.GetCustomer).Methods(http.MethodGet)
 
-	fmt.Printf("Banking service started at port " + viper.GetString("app.port"))
+	router.HandleFunc("/customers/{customerID:[0-9]+}/accounts", accountHandler.GetAccounts).Methods(http.MethodGet)
+	router.HandleFunc("/customers/{customerID:[0-9]+}/accounts", accountHandler.NewAccount).Methods(http.MethodPost)
+
+	// fmt.Printf("Banking service started at port " + viper.GetString("app.port"))
+	logs.Info("Banking service started at port " + viper.GetString("app.port"))
 	http.ListenAndServe(fmt.Sprintf(":%v", viper.GetInt("app.port")), router)
 }
 
